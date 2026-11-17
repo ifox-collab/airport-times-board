@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airport Times Board</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --card: #121826;
+    --accent: #00d4ff;
+    --text: #e8eef5;
+    --muted: #8b9bb4;
+    --day: #ffd166;
+    --night: #6c5ce7;
+    --border: #1e293b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  header {
+    background: #0d1320;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 {
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+    color: var(--accent);
+  }
+  header .controls {
+    display: flex;
+    gap: 10px;
+  }
+  button {
+    background: #1a2332;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+  button:hover { background: #243044; }
+  #board-container {
+    height: calc(100vh - 60px);
+    overflow: hidden;
+    position: relative;
+  }
+  #board {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    transition: transform 0.3s ease;
+  }
+  .airport-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 140px 80px 1fr 1fr 100px;
+    gap: 12px;
+    align-items: center;
+    cursor: grab;
+    user-select: none;
+  }
+  .airport-card:active { cursor: grabbing; }
+  .airport-card.dragging { opacity: 0.5; }
+  .code {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .name {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .daynight {
+    text-align: center;
+    font-size: 1.4rem;
+  }
+  .times {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .time-big {
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .time-small {
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .offset {
+    text-align: right;
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+  .sun {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .scrolling #board {
+    animation: scroll 40s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+  .pause-scroll { animation-play-state: paused !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✈ AIRPORT TIMES</h1>
+  <div class="controls">
+    <button id="shuffle">Shuffle</button>
+    <button id="toggle-scroll">Pause Scroll</button>
+    <button id="reset-order">Reset Order</button>
+  </div>
+</header>
+<div id="board-container">
+  <div id="board"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+<script>
+const airports = [
+  { code: 'DRW', name: 'Darwin', tz: 'Australia/Darwin', lat: -12.408, lng: 130.877 },
+  { code: 'CNS', name: 'Cairns', tz: 'Australia/Brisbane', lat: -16.886, lng: 145.755 },
+  { code: 'BNE', name: 'Brisbane', tz: 'Australia/Brisbane', lat: -27.384, lng: 153.117 },
+  { code: 'SYD', name: 'Sydney', tz: 'Australia/Sydney', lat: -33.946, lng: 151.177 },
+  { code: 'MEL', name: 'Melbourne', tz: 'Australia/Melbourne', lat: -37.673, lng: 144.843 },
+  { code: 'ADL', name: 'Adelaide', tz: 'Australia/Adelaide', lat: -34.945, lng: 138.531 },
+  { code: 'PER', name: 'Perth', tz: 'Australia/Perth', lat: -31.940, lng: 115.967 },
+  { code: 'AKL', name: 'Auckland', tz: 'Pacific/Auckland', lat: -37.008, lng: 174.792 },
+  { code: 'NLK', name: 'Norfolk Island', tz: 'Pacific/Norfolk', lat: -29.042, lng: 167.939 },
+  { code: 'BAH', name: 'Bahrain', tz: 'Asia/Bahrain', lat: 26.270, lng: 50.634 },
+  { code: 'UTC', name: 'UTC', tz: 'UTC', lat: 0, lng: 0 }
+];
+
+let order = airports.map((_, i) => i);
+let dragging = null;
+
+function getOffset(tz, date = new Date()) {
+  try {
+    const formatter = new Intl.DateTimeFormat('en', {
+      timeZone: tz,
+      timeZoneName: 'shortOffset'
+    });
+    const parts = formatter.formatToParts(date);
+    const offsetPart = parts.find(p => p.type === 'timeZoneName');
+    if (offsetPart) {
+      let off = offsetPart.value;
+      if (off.startsWith('GMT')) off = off.replace('GMT', 'UTC');
+      return off;
+    }
+  } catch (e) {}
+  return 'UTC';
+}
+
+function formatTime(date, tz) {
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone: tz,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).format(date);
+}
+
+function formatDate(date, tz) {
+  return new Intl.DateTimeFormat('en-AU', {
+    timeZone: tz,
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(date);
+}
+
+function getSunTimes(lat, lng, date, tz) {
+  if (lat === 0 && lng === 0) return { sunrise: '--:--', sunset: '--:--', isDay: true };
+  const times = SunCalc.getTimes(date, lat, lng);
+  const sunrise = formatTime(times.sunrise, tz);
+  const sunset = formatTime(times.sunset, tz);
+  const now = new Date();
+  const isDay = now >= times.sunrise && now <= times.sunset;
+  return { sunrise, sunset, isDay };
+}
+
+function render() {
+  const board = document.getElementById('board');
+  const now = new Date();
+  const utcTime = formatTime(now, 'UTC');
+  const utcDate = formatDate(now, 'UTC');
+
+  function cardHTML(idx, isDuplicate = false) {
+    const a = airports[idx];
+    const localTime = formatTime(now, a.tz);
+    const localDate = formatDate(now, a.tz);
+    const offset = getOffset(a.tz, now);
+    const sun = getSunTimes(a.lat, a.lng, now, a.tz);
+    const dayNight = sun.isDay ? '☀️' : '🌙';
+    const dupAttr = isDuplicate ? ' data-duplicate="true"' : ' draggable="true"';
+
+    return `
+      <div class="airport-card" data-idx="${idx}"${dupAttr}>
+        <div>
+          <div class="code">${a.code}</div>
+          <div class="name">${a.name}</div>
+        </div>
+        <div class="daynight">${dayNight}</div>
+        <div class="times">
+          <div class="time-big">${localTime}</div>
+          <div class="time-small">${localDate}</div>
+          <div class="sun">↑ ${sun.sunrise} &nbsp; ↓ ${sun.sunset}</div>
+        </div>
+        <div class="times">
+          <div class="time-small">UTC</div>
+          <div class="time-big">${utcTime}</div>
+          <div class="time-small">${utcDate}</div>
+        </div>
+        <div class="offset">${offset}</div>
+      </div>
+    `;
+  }
+
+  board.innerHTML = order.map(idx => cardHTML(idx)).join('') + order.map(idx => cardHTML(idx, true)).join('');
+
+  setupDrag();
+}
+
+function setupDrag() {
+  const cards = document.querySelectorAll('.airport-card:not([data-duplicate])');
+  cards.forEach(card => {
+    card.addEventListener('dragstart', e => {
+      dragging = card;
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', card.dataset.idx);
+    });
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      // Update order from DOM
+      const newOrder = [...document.querySelectorAll('#board > .airport-card:not([data-duplicate])')]
+        .map(c => parseInt(c.dataset.idx));
+      if (newOrder.length === order.length) {
+        order = newOrder;
+      }
+      render();
+    });
+    card.addEventListener('dragover', e => e.preventDefault());
+  });
+}
+
+document.getElementById('shuffle').onclick = () => {
+  order = [...order].sort(() => Math.random() - 0.5);
+  render();
+};
+
+document.getElementById('reset-order').onclick = () => {
+  order = airports.map((_, i) => i);
+  render();
+};
+
+let scrolling = true;
+document.getElementById('toggle-scroll').onclick = () => {
+  const container = document.getElementById('board-container');
+  scrolling = !scrolling;
+  container.classList.toggle('scrolling', scrolling);
+  document.getElementById('toggle-scroll').textContent = scrolling ? 'Pause Scroll' : 'Resume Scroll';
+};
+
+function checkOverflow() {
+  const container = document.getElementById('board-container');
+  const board = document.getElementById('board');
+  if (board.scrollHeight > container.clientHeight * 1.5) {
+    container.classList.add('scrolling');
+  }
+}
+
+setInterval(render, 1000);
+render();
+setTimeout(checkOverflow, 500);
+</script>
+</body>
+</html>
