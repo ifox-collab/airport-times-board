@@ -6,14 +6,12 @@
 <title>Airport Times Board</title>
 <style>
   :root {
-    --bg: #0a0e17;
-    --card: #121826;
-    --accent: #00d4ff;
-    --text: #e8eef5;
-    --muted: #8b9bb4;
-    --day: #ffd166;
-    --night: #6c5ce7;
-    --border: #1e293b;
+    --bg: #000000;
+    --card: #000000;
+    --accent: #CBFF55;
+    --text: #CBFF55;
+    --muted: #CBFF55;
+    --border: #1a1a1a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -24,8 +22,8 @@
     overflow: hidden;
   }
   header {
-    background: #0d1320;
-    border-bottom: 1px solid var(--border);
+    background: #000000;
+    border-bottom: 1px solid #1a1a1a;
     padding: 8px 12px;
     display: flex;
     justify-content: space-between;
@@ -42,15 +40,15 @@
     gap: 6px;
   }
   button {
-    background: #1a2332;
-    color: var(--text);
-    border: 1px solid var(--border);
+    background: #000000;
+    color: var(--accent);
+    border: 1px solid #333;
     padding: 4px 8px;
     border-radius: 3px;
     cursor: pointer;
     font-size: 0.7rem;
   }
-  button:hover { background: #243044; }
+  button:hover { background: #111; }
   #board-container {
     height: calc(100vh - 44px);
     overflow: hidden;
@@ -63,8 +61,8 @@
     padding: 8px;
   }
   .airport-card {
-    background: var(--card);
-    border: 1px solid var(--border);
+    background: #000000;
+    border: 1px solid #222;
     border-radius: 6px;
     padding: 8px 10px;
     display: flex;
@@ -87,7 +85,7 @@
   }
   .name {
     font-size: 0.7rem;
-    color: var(--muted);
+    color: var(--accent);
   }
   .daynight {
     font-size: 1.1rem;
@@ -102,23 +100,24 @@
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.5px;
+    color: #ffffff;
   }
   .time-small {
     font-size: 0.72rem;
-    color: var(--muted);
+    color: var(--accent);
   }
   .sun-row {
     display: flex;
     justify-content: space-between;
     font-size: 0.68rem;
-    color: var(--muted);
+    color: var(--accent);
   }
   .utc-row {
     display: flex;
     justify-content: space-between;
     font-size: 0.68rem;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
+    color: var(--accent);
+    border-top: 1px solid #222;
     padding-top: 2px;
     margin-top: 2px;
   }
