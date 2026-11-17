@@ -26,91 +26,101 @@
   header {
     background: #0d1320;
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
+    padding: 8px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
   }
   header h1 {
-    font-size: 1.4rem;
-    letter-spacing: 1px;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
     color: var(--accent);
   }
   header .controls {
     display: flex;
-    gap: 10px;
+    gap: 6px;
   }
   button {
     background: #1a2332;
     color: var(--text);
     border: 1px solid var(--border);
-    padding: 6px 12px;
-    border-radius: 4px;
+    padding: 4px 8px;
+    border-radius: 3px;
     cursor: pointer;
-    font-size: 0.85rem;
+    font-size: 0.7rem;
   }
   button:hover { background: #243044; }
   #board-container {
-    height: calc(100vh - 60px);
+    height: calc(100vh - 44px);
     overflow: hidden;
     position: relative;
   }
   #board {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 12px;
-    transition: transform 0.3s ease;
+    gap: 6px;
+    padding: 8px;
   }
   .airport-card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    display: grid;
-    grid-template-columns: 140px 80px 1fr 1fr 100px;
-    gap: 12px;
-    align-items: center;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     cursor: grab;
     user-select: none;
   }
   .airport-card:active { cursor: grabbing; }
   .airport-card.dragging { opacity: 0.5; }
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
   .code {
-    font-size: 1.6rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: var(--accent);
   }
   .name {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
     color: var(--muted);
   }
   .daynight {
-    text-align: center;
-    font-size: 1.4rem;
-  }
-  .times {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-  .time-big {
-    font-size: 1.5rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-  .time-small {
-    font-size: 0.85rem;
-    color: var(--muted);
+    font-size: 1.1rem;
   }
   .offset {
-    text-align: right;
-    font-size: 1.1rem;
+    font-size: 0.85rem;
     font-weight: 600;
+    color: var(--accent);
   }
-  .sun {
-    font-size: 0.8rem;
+  .time-big {
+    font-size: 1.6rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+  }
+  .time-small {
+    font-size: 0.72rem;
     color: var(--muted);
+  }
+  .sun-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+  .utc-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.68rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 2px;
+    margin-top: 2px;
   }
   .scrolling #board {
     animation: scroll 40s linear infinite;
@@ -218,22 +228,26 @@ function render() {
 
     return `
       <div class="airport-card" data-idx="${idx}"${dupAttr}>
-        <div>
-          <div class="code">${a.code}</div>
-          <div class="name">${a.name}</div>
+        <div class="top-row">
+          <div>
+            <div class="code">${a.code}</div>
+            <div class="name">${a.name}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="daynight">${dayNight}</span>
+            <span class="offset">${offset}</span>
+          </div>
         </div>
-        <div class="daynight">${dayNight}</div>
-        <div class="times">
-          <div class="time-big">${localTime}</div>
-          <div class="time-small">${localDate}</div>
-          <div class="sun">↑ ${sun.sunrise} &nbsp; ↓ ${sun.sunset}</div>
+        <div class="time-big">${localTime}</div>
+        <div class="time-small">${localDate}</div>
+        <div class="sun-row">
+          <span>↑ ${sun.sunrise}</span>
+          <span>↓ ${sun.sunset}</span>
         </div>
-        <div class="times">
-          <div class="time-small">UTC</div>
-          <div class="time-big">${utcTime}</div>
-          <div class="time-small">${utcDate}</div>
+        <div class="utc-row">
+          <span>UTC ${utcTime}</span>
+          <span>${utcDate}</span>
         </div>
-        <div class="offset">${offset}</div>
       </div>
     `;
   }
@@ -253,7 +267,6 @@ function setupDrag() {
     });
     card.addEventListener('dragend', () => {
       card.classList.remove('dragging');
-      // Update order from DOM
       const newOrder = [...document.querySelectorAll('#board > .airport-card:not([data-duplicate])')]
         .map(c => parseInt(c.dataset.idx));
       if (newOrder.length === order.length) {
