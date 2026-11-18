@@ -79,47 +79,55 @@
     align-items: center;
   }
   .code {
-    font-size: 1.15rem;
+    font-size: 1.6rem;
     font-weight: 700;
     color: var(--accent);
+    line-height: 1;
   }
   .name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--accent);
+    margin-top: -2px;
   }
   .daynight {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
   .offset {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--accent);
   }
   .time-big {
-    font-size: 1.6rem;
+    font-size: 1.55rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.5px;
     color: #ffffff;
+    line-height: 1.1;
   }
   .time-small {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--accent);
   }
   .sun-row {
     display: flex;
     justify-content: space-between;
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     color: var(--accent);
+    margin-top: 1px;
   }
-  .utc-row {
+  .bottom-row {
     display: flex;
     justify-content: space-between;
-    font-size: 0.68rem;
-    color: var(--accent);
-    border-top: 1px solid #222;
-    padding-top: 2px;
+    align-items: flex-end;
     margin-top: 2px;
+    font-size: 0.65rem;
+    color: var(--accent);
+  }
+  .utc-time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-align: right;
   }
   .scrolling #board {
     animation: scroll 40s linear infinite;
@@ -232,7 +240,7 @@ function render() {
             <div class="code">${a.code}</div>
             <div class="name">${a.name}</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
             <span class="daynight">${dayNight}</span>
             <span class="offset">${offset}</span>
           </div>
@@ -243,9 +251,12 @@ function render() {
           <span>↑ ${sun.sunrise}</span>
           <span>↓ ${sun.sunset}</span>
         </div>
-        <div class="utc-row">
-          <span>UTC ${utcTime}</span>
-          <span>${utcDate}</span>
+        <div class="bottom-row">
+          <span></span>
+          <div class="utc-time">
+            UTC ${utcTime}<br>
+            <span style="font-size:0.6rem;font-weight:400;">${utcDate}</span>
+          </div>
         </div>
       </div>
     `;
