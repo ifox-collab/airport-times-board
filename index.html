@@ -8,9 +8,9 @@
   :root {
     --bg: #000000;
     --card: #000000;
-    --accent: #CBFF55;
-    --text: #CBFF55;
-    --muted: #CBFF55;
+    --accent: #A8E040;
+    --text: #A8E040;
+    --muted: #A8E040;
     --border: #1a1a1a;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -79,6 +79,11 @@
     flex-direction: column;
     gap: 2px;
   }
+  .code-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
   .code {
     font-size: 2rem;
     font-weight: 700;
@@ -86,8 +91,9 @@
     line-height: 1;
   }
   .name {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--accent);
+    font-weight: 500;
   }
   .meta {
     font-size: 0.68rem;
@@ -230,8 +236,10 @@ function render() {
     return `
       <div class="airport-card" data-idx="${idx}"${dupAttr}>
         <div class="left-col">
-          <div class="code">${a.code}</div>
-          <div class="name">${a.name}</div>
+          <div class="code-row">
+            <div class="code">${a.code}</div>
+            <div class="name">${a.name}</div>
+          </div>
           <div class="meta">${localDate}</div>
           <div class="meta">↑ ${sun.sunrise} &nbsp; ↓ ${sun.sunset}</div>
           <div class="meta">${offset}</div>
