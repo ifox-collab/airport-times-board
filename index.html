@@ -63,71 +63,64 @@
   .airport-card {
     background: #000000;
     border: 1px solid #222;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 10px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 12px;
     cursor: grab;
     user-select: none;
-    min-height: 140px;
+    align-items: center;
   }
   .airport-card:active { cursor: grabbing; }
   .airport-card.dragging { opacity: 0.5; }
-  .top-row {
+  .left-col {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
   }
   .code {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 700;
     color: var(--accent);
     line-height: 1;
   }
   .name {
-    font-size: 0.7rem;
-    color: var(--accent);
-    margin-top: 1px;
-  }
-  .right-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-  }
-  .time-big {
-    font-size: 1.7rem;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.5px;
-    color: #ffffff;
-    line-height: 1;
-    margin: 4px 0 2px 0;
-  }
-  .time-small {
     font-size: 0.75rem;
     color: var(--accent);
   }
-  .sun-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.7rem;
+  .meta {
+    font-size: 0.68rem;
     color: var(--accent);
-    margin-top: 4px;
+    line-height: 1.3;
   }
-  .bottom-row {
+  .right-col {
     display: flex;
-    justify-content: flex-end;
+    flex-direction: column;
     align-items: flex-end;
-    margin-top: auto;
-    font-size: 0.7rem;
+    gap: 4px;
+  }
+  .time-big {
+    font-size: 1.8rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    line-height: 1;
+  }
+  .daynight-block {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
     color: var(--accent);
   }
-  .utc-time {
+  .utc-near {
+    font-size: 0.7rem;
+    color: var(--accent);
     text-align: right;
-    font-weight: 600;
-    line-height: 1.2;
+    margin-top: 2px;
   }
   .scrolling #board {
     animation: scroll 40s linear infinite;
@@ -230,32 +223,26 @@ function render() {
     const localDate = formatDate(now, a.tz);
     const offset = getOffset(a.tz, now);
     const sun = getSunTimes(a.lat, a.lng, now, a.tz);
+    const dayLabel = sun.isDay ? 'DAY' : 'NIGHT';
     const dayNight = sun.isDay ? '☀️' : '🌙';
     const dupAttr = isDuplicate ? ' data-duplicate="true"' : ' draggable="true"';
 
     return `
       <div class="airport-card" data-idx="${idx}"${dupAttr}>
-        <div class="top-row">
-          <div>
-            <div class="code">${a.code}</div>
-            <div class="name">${a.name}</div>
-          </div>
-          <div class="right-top">
+        <div class="left-col">
+          <div class="code">${a.code}</div>
+          <div class="name">${a.name}</div>
+          <div class="meta">${localDate}</div>
+          <div class="meta">↑ ${sun.sunrise} &nbsp; ↓ ${sun.sunset}</div>
+          <div class="meta">${offset}</div>
+        </div>
+        <div class="right-col">
+          <div class="time-big">${localTime}</div>
+          <div class="daynight-block">
             <span>${dayNight}</span>
-            <span>${offset}</span>
+            <span>${dayLabel}</span>
           </div>
-        </div>
-        <div class="time-big">${localTime}</div>
-        <div class="time-small">${localDate}</div>
-        <div class="sun-row">
-          <span>↑ ${sun.sunrise}</span>
-          <span>↓ ${sun.sunset}</span>
-        </div>
-        <div class="bottom-row">
-          <div class="utc-time">
-            UTC ${utcTime}<br>
-            <span style="font-weight:400;font-size:0.65rem;">${utcDate}</span>
-          </div>
+          <div class="utc-near">UTC ${utcTime}</div>
         </div>
       </div>
     `;
