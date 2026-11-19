@@ -67,6 +67,19 @@
     overflow: hidden;
     position: relative;
   }
+  #board-container.reorder-mode {
+    overflow-y: auto;
+  }
+  #board-container.reorder-mode #board {
+    transform: none !important;
+  }
+  .airport-card.reorderable {
+    cursor: grab;
+    border-color: #A8E040;
+  }
+  .airport-card.reorderable:active {
+    cursor: grabbing;
+  }
   #board {
     display: flex;
     flex-direction: column;
@@ -459,27 +472,55 @@ function setupDrag() {
   const cards = document.querySelectorAll('.airport-card:not([data-duplicate])');
   cards.forEach(card => {
     card.addEventListener('dragstart', e => {
+      if (!document.getElementById('board-container').classList.contains('reorder-mode')) {
+        e.preventDefault();
+        return;
+      }
       dragging = card;
       card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', card.dataset.idx);
     });
+
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!dragging || dragging === card) return;
+      const rect = card.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if (e.clientY < mid) {
+        card.parentNode.insertBefore(dragging, card);
+      } else {
+        card.parentNode.insertBefore(dragging, card.nextSibling);
+      }
+    });
+
     card.addEventListener('dragend', () => {
-      card.classList.remove('dragging');
+      if (dragging) dragging.classList.remove('dragging');
+      dragging = null;
       const newOrder = [...document.querySelectorAll('#board > .airport-card:not([data-duplicate])')]
-        .map(c => parseInt(c.dataset.idx));
+        .map(c => parseInt(c.dataset.idx, 10))
+        .filter(n => !isNaN(n));
       if (newOrder.length === order.length) {
         order = newOrder;
         saveOrder();
       }
-      render(true);
     });
-    card.addEventListener('dragover', e => e.preventDefault());
   });
 }
 
 document.getElementById('reorder').onclick = () => {
-  scrolling = false;
-  document.getElementById('toggle-scroll').textContent = 'Resume Scroll';
+  const container = document.getElementById('board-container');
+  const isReordering = container.classList.toggle('reorder-mode');
+  scrolling = !isReordering;
+  document.getElementById('toggle-scroll').textContent = scrolling ? 'Pause Scroll' : 'Resume Scroll';
+
+  document.querySelectorAll('.airport-card:not([data-duplicate])').forEach(card => {
+    card.classList.toggle('reorderable', isReordering);
+  });
+
+  if (isReordering) {
+    document.getElementById('board').style.transform = 'none';
+  }
 };
 
 document.getElementById('reset-order').onclick = () => {
@@ -497,7 +538,7 @@ function startContinuousScroll() {
   const board = document.getElementById('board');
 
   function animate() {
-    if (scrolling && board.scrollHeight > container.clientHeight) {
+    if (scrolling && !document.getElementById('board-container').classList.contains('reorder-mode') && board.scrollHeight > container.clientHeight) {
       scrollPos += scrollSpeed;
       const halfHeight = board.scrollHeight / 2;
       if (scrollPos >= halfHeight) {
