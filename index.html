@@ -510,8 +510,10 @@ function setupDrag() {
 
 document.getElementById('reorder').onclick = () => {
   const container = document.getElementById('board-container');
+  const btn = document.getElementById('reorder');
   const isReordering = container.classList.toggle('reorder-mode');
   scrolling = !isReordering;
+  btn.textContent = isReordering ? 'Done' : 'Re-order';
   document.getElementById('toggle-scroll').textContent = scrolling ? 'Pause Scroll' : 'Resume Scroll';
 
   document.querySelectorAll('.airport-card:not([data-duplicate])').forEach(card => {
