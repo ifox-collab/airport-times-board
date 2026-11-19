@@ -160,7 +160,7 @@
 <header>
   <h1>✈ AIRPORT TIMES</h1>
   <div class="controls">
-    <button id="shuffle">Shuffle</button>
+    <button id="reorder">Re-order</button>
     <button id="toggle-scroll">Pause Scroll</button>
     <button id="reset-order">Reset Order</button>
   </div>
@@ -477,10 +477,9 @@ function setupDrag() {
   });
 }
 
-document.getElementById('shuffle').onclick = () => {
-  order = [...order].sort(() => Math.random() - 0.5);
-  saveOrder();
-  render(true);
+document.getElementById('reorder').onclick = () => {
+  scrolling = false;
+  document.getElementById('toggle-scroll').textContent = 'Resume Scroll';
 };
 
 document.getElementById('reset-order').onclick = () => {
