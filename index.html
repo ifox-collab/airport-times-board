@@ -248,7 +248,7 @@ function checkHeyTime() {
     if (!(brisHour === 18 && min === 0)) {
       nameIndex++;
     }
-    setTimeout(() => { heyActive = false; render(); }, 35000);
+    setTimeout(() => { heyActive = false; render(true); }, 35000);
   }
 }
 
@@ -325,11 +325,58 @@ function getSunTimes(lat, lng, date, tz) {
   return { sunrise, sunset, isDay };
 }
 
-function render() {
-  const board = document.getElementById('board');
+let lastOrderKey = '';
+let lastHeyActive = false;
+
+function updateTimesOnly() {
   const now = new Date();
   const utcTime = formatTime(now, 'UTC');
-  const utcDate = formatDate(now, 'UTC');
+  const cards = document.querySelectorAll('.airport-card:not(.hey-card)');
+
+  cards.forEach(card => {
+    const idx = parseInt(card.dataset.idx, 10);
+    if (isNaN(idx)) return;
+    const a = airports[idx];
+    const localTime = formatTime(now, a.tz);
+    const localDate = formatDate(now, a.tz);
+    const offset = getOffset(a.tz, now);
+    const sun = getSunTimes(a.lat, a.lng, now, a.tz);
+    const dayLabel = sun.isDay ? 'DAY' : 'NIGHT';
+    const dayNight = sun.isDay ? '☀️' : '🌙';
+
+    const timeEl = card.querySelector('.time-big');
+    const dateEl = card.querySelector('.meta:nth-of-type(1)');
+    const sunEl = card.querySelector('.meta:nth-of-type(2)');
+    const offsetEl = card.querySelector('.meta:nth-of-type(3)');
+    const dayNightEl = card.querySelector('.daynight-block span:first-child');
+    const dayLabelEl = card.querySelector('.daynight-block span:last-child');
+    const utcEl = card.querySelector('.utc-near');
+
+    if (timeEl) timeEl.textContent = localTime;
+    if (dateEl) dateEl.textContent = localDate;
+    if (sunEl) sunEl.innerHTML = `↑ ${sun.sunrise} &nbsp; ↓ ${sun.sunset}`;
+    if (offsetEl) offsetEl.textContent = offset;
+    if (dayNightEl) dayNightEl.textContent = dayNight;
+    if (dayLabelEl) dayLabelEl.textContent = dayLabel;
+    if (utcEl) utcEl.textContent = `UTC ${utcTime}`;
+  });
+}
+
+function render(force = false) {
+  const board = document.getElementById('board');
+  const orderKey = order.join(',');
+  const needsFullRebuild = force || orderKey !== lastOrderKey || heyActive !== lastHeyActive;
+
+  if (!needsFullRebuild) {
+    updateTimesOnly();
+    return;
+  }
+
+  lastOrderKey = orderKey;
+  lastHeyActive = heyActive;
+
+  const now = new Date();
+  const utcTime = formatTime(now, 'UTC');
 
   function cardHTML(idx, isDuplicate = false) {
     const a = airports[idx];
@@ -365,9 +412,7 @@ function render() {
   }
 
   let html = order.map(idx => cardHTML(idx)).join('');
-  if (heyActive) {
-    html += getHeyCard();
-  }
+  if (heyActive) html += getHeyCard();
   html += order.map(idx => cardHTML(idx, true)).join('');
   board.innerHTML = html;
 
@@ -390,7 +435,7 @@ function setupDrag() {
         order = newOrder;
         saveOrder();
       }
-      render();
+      render(true);
     });
     card.addEventListener('dragover', e => e.preventDefault());
   });
@@ -399,13 +444,13 @@ function setupDrag() {
 document.getElementById('shuffle').onclick = () => {
   order = [...order].sort(() => Math.random() - 0.5);
   saveOrder();
-  render();
+  render(true);
 };
 
 document.getElementById('reset-order').onclick = () => {
   order = airports.map((_, i) => i);
   saveOrder();
-  render();
+  render(true);
 };
 
 let scrolling = true;
@@ -449,7 +494,7 @@ function checkOverflow() {
 setInterval(render, 1000);
 setInterval(checkHeyTime, 1000);
 setInterval(checkDailyReload, 30000);
-render();
+render(true);
 setTimeout(checkOverflow, 500);
 </script>
 </body>
