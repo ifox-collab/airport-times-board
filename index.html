@@ -121,6 +121,19 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--accent);
+    transition: all 0.3s ease;
+  }
+  .daynight-block.changing {
+    animation: dayNightChange 10s ease-in-out;
+  }
+  @keyframes dayNightChange {
+    0% { transform: scale(1); filter: brightness(1); }
+    10% { transform: scale(0.6); opacity: 0.3; }
+    20% { transform: scale(1.4); opacity: 1; filter: brightness(2.5) drop-shadow(0 0 12px #A8E040); }
+    35% { transform: scale(1.1); filter: brightness(1.8); }
+    50% { transform: scale(1.25); filter: brightness(2.2) drop-shadow(0 0 8px #A8E040); }
+    70% { transform: scale(1); filter: brightness(1.4); }
+    100% { transform: scale(1); filter: brightness(1); }
   }
   .utc-near {
     font-size: 0.7rem;
@@ -327,6 +340,7 @@ function getSunTimes(lat, lng, date, tz) {
 
 let lastOrderKey = '';
 let lastHeyActive = false;
+let lastDayNightState = {};
 
 function updateTimesOnly() {
   const now = new Date();
@@ -343,6 +357,14 @@ function updateTimesOnly() {
     const sun = getSunTimes(a.lat, a.lng, now, a.tz);
     const dayLabel = sun.isDay ? 'DAY' : 'NIGHT';
     const dayNight = sun.isDay ? '☀️' : '🌙';
+    const stateKey = a.code;
+
+    const dayNightBlock = card.querySelector('.daynight-block');
+    if (dayNightBlock && lastDayNightState[stateKey] !== undefined && lastDayNightState[stateKey] !== sun.isDay) {
+      dayNightBlock.classList.add('changing');
+      setTimeout(() => dayNightBlock.classList.remove('changing'), 10000);
+    }
+    lastDayNightState[stateKey] = sun.isDay;
 
     const timeEl = card.querySelector('.time-big');
     const dateEl = card.querySelector('.meta:nth-of-type(1)');
