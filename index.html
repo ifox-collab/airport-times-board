@@ -414,7 +414,8 @@ function updateTimesOnly() {
 function render(force = false) {
   const board = document.getElementById('board');
   const orderKey = order.join(',');
-  const needsFullRebuild = force || orderKey !== lastOrderKey || heyActive !== lastHeyActive;
+  const isReordering = document.getElementById('board-container').classList.contains('reorder-mode');
+  const needsFullRebuild = force || orderKey !== lastOrderKey || heyActive !== lastHeyActive || isReordering;
 
   if (!needsFullRebuild) {
     updateTimesOnly();
@@ -461,11 +462,19 @@ function render(force = false) {
   }
 
   let html = order.map(idx => cardHTML(idx)).join('');
-  if (heyActive) html += getHeyCard();
-  html += order.map(idx => cardHTML(idx, true)).join('');
+  if (heyActive && !isReordering) html += getHeyCard();
+  if (!isReordering) {
+    html += order.map(idx => cardHTML(idx, true)).join('');
+  }
   board.innerHTML = html;
 
   setupDrag();
+
+  if (isReordering) {
+    document.querySelectorAll('.airport-card:not([data-duplicate])').forEach(card => {
+      card.classList.add('reorderable');
+    });
+  }
 }
 
 function setupDrag() {
@@ -516,13 +525,10 @@ document.getElementById('reorder').onclick = () => {
   btn.textContent = isReordering ? 'Done' : 'Re-order';
   document.getElementById('toggle-scroll').textContent = scrolling ? 'Pause Scroll' : 'Resume Scroll';
 
-  document.querySelectorAll('.airport-card:not([data-duplicate])').forEach(card => {
-    card.classList.toggle('reorderable', isReordering);
-  });
-
   if (isReordering) {
     document.getElementById('board').style.transform = 'none';
   }
+  render(true);
 };
 
 document.getElementById('reset-order').onclick = () => {
