@@ -171,6 +171,7 @@ const names = ['Tyson', 'Liam', 'Mel', 'Chris', 'Carro', 'Rachel', 'Rudy'];
 let nameIndex = 0;
 let heyActive = false;
 let lastHeyMinute = -1;
+let lastReloadDay = null;
 
 function getHeyCard() {
   const now = new Date();
@@ -250,6 +251,30 @@ function checkHeyTime() {
       nameIndex++;
     }
     setTimeout(() => { heyActive = false; render(); }, 35000);
+  }
+}
+
+function checkDailyReload() {
+  const now = new Date();
+  const bris = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Brisbane',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(now);
+
+  const dayKey = bris.find(p => p.type === 'year').value + '-' +
+                 bris.find(p => p.type === 'month').value + '-' +
+                 bris.find(p => p.type === 'day').value;
+  const hours = parseInt(bris.find(p => p.type === 'hour').value, 10);
+  const minutes = parseInt(bris.find(p => p.type === 'minute').value, 10);
+
+  if (hours === 7 && minutes >= 30 && lastReloadDay !== dayKey) {
+    lastReloadDay = dayKey;
+    location.reload(true);
   }
 }
 
@@ -401,6 +426,7 @@ function checkOverflow() {
 
 setInterval(render, 1000);
 setInterval(checkHeyTime, 1000);
+setInterval(checkDailyReload, 30000);
 render();
 setTimeout(checkOverflow, 500);
 </script>
