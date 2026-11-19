@@ -128,14 +128,6 @@
     text-align: right;
     margin-top: 2px;
   }
-  .scrolling #board {
-    animation: scroll 40s linear infinite;
-  }
-  @keyframes scroll {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-50%); }
-  }
-  .pause-scroll { animation-play-state: paused !important; }
 </style>
 </head>
 <body>
@@ -417,18 +409,40 @@ document.getElementById('reset-order').onclick = () => {
 };
 
 let scrolling = true;
-document.getElementById('toggle-scroll').onclick = () => {
+let scrollPos = 0;
+let scrollSpeed = 0.4;
+
+function startContinuousScroll() {
   const container = document.getElementById('board-container');
+  const board = document.getElementById('board');
+
+  function animate() {
+    if (scrolling && board.scrollHeight > container.clientHeight) {
+      scrollPos += scrollSpeed;
+      const halfHeight = board.scrollHeight / 2;
+      if (scrollPos >= halfHeight) {
+        scrollPos = 0;
+      }
+      board.style.transform = `translateY(-${scrollPos}px)`;
+    }
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+
+document.getElementById('toggle-scroll').onclick = () => {
   scrolling = !scrolling;
-  container.classList.toggle('scrolling', scrolling);
   document.getElementById('toggle-scroll').textContent = scrolling ? 'Pause Scroll' : 'Resume Scroll';
 };
+
+let scrollStarted = false;
 
 function checkOverflow() {
   const container = document.getElementById('board-container');
   const board = document.getElementById('board');
-  if (board.scrollHeight > container.clientHeight * 1.5) {
-    container.classList.add('scrolling');
+  if (board.scrollHeight > container.clientHeight && !scrollStarted) {
+    scrollStarted = true;
+    startContinuousScroll();
   }
 }
 
