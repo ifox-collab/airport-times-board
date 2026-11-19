@@ -174,11 +174,16 @@ let lastHeyMinute = -1;
 
 function getHeyCard() {
   const now = new Date();
-  const hours = now.getHours();
-  const min = now.getMinutes();
+  const brisTime = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Brisbane',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).formatToParts(now);
+  const brisHour = parseInt(brisTime.find(p => p.type === 'hour').value, 10);
+  const brisMin = parseInt(brisTime.find(p => p.type === 'minute').value, 10);
 
-  // Special 18:00 greeting
-  if (hours === 18 && min === 0) {
+  if (brisHour === 18 && brisMin === 0) {
     return `
       <div class="airport-card hey-card" style="justify-content:center; text-align:center; background:#111; padding:16px;">
         <div style="font-size:1.4rem; font-weight:700; color:var(--accent); line-height:1.3;">
@@ -207,13 +212,23 @@ function getHeyCard() {
 }
 
 function isWithinHeyHours(now) {
-  const day = now.getDay();
+  const brisFormatter = new Intl.DateTimeFormat('en-AU', {
+    timeZone: 'Australia/Brisbane',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  const parts = brisFormatter.formatToParts(now);
+  const dayMap = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6, Sun: 0 };
+  const dayName = parts.find(p => p.type === 'weekday').value;
+  const day = dayMap[dayName];
+  const hours = parseInt(parts.find(p => p.type === 'hour').value, 10);
+  const minutes = parseInt(parts.find(p => p.type === 'minute').value, 10);
+
   if (day < 1 || day > 4) return false;
 
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
   const totalMinutes = hours * 60 + minutes;
-
   if (totalMinutes >= 18 * 60 || totalMinutes <= 4 * 60 + 30) return true;
   return false;
 }
@@ -224,12 +239,14 @@ function checkHeyTime() {
 
   const min = now.getMinutes();
   const sec = now.getSeconds();
-  const hours = now.getHours();
 
   if ((min === 0 || min === 30) && sec < 5 && lastHeyMinute !== min) {
     lastHeyMinute = min;
     heyActive = true;
-    if (!(hours === 18 && min === 0)) {
+    const brisHour = parseInt(new Intl.DateTimeFormat('en-AU', {
+      timeZone: 'Australia/Brisbane', hour: '2-digit', hour12: false
+    }).format(now), 10);
+    if (!(brisHour === 18 && min === 0)) {
       nameIndex++;
     }
     setTimeout(() => { heyActive = false; render(); }, 35000);
