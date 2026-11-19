@@ -29,6 +29,19 @@
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    opacity: 0;
+    transform: translateY(-100%);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  header:hover,
+  header.visible {
+    opacity: 1;
+    transform: translateY(0);
   }
   header h1 {
     font-size: 1rem;
@@ -50,7 +63,7 @@
   }
   button:hover { background: #111; }
   #board-container {
-    height: calc(100vh - 44px);
+    height: 100vh;
     overflow: hidden;
     position: relative;
   }
@@ -191,9 +204,10 @@ function getHeyCard() {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
-  }).formatToParts(now);
-  const brisHour = parseInt(brisTime.find(p => p.type === 'hour').value, 10);
-  const brisMin = parseInt(brisTime.find(p => p.type === 'minute').value, 10);
+  });
+  const parts = brisTime.formatToParts(now);
+  const brisHour = parseInt(parts.find(p => p.type === 'hour').value, 10);
+  const brisMin = parseInt(parts.find(p => p.type === 'minute').value, 10);
 
   if (brisHour === 18 && brisMin === 0) {
     return `
@@ -523,6 +537,16 @@ setInterval(() => {
 
 setInterval(checkHeyTime, 1000);
 setInterval(checkDailyReload, 30000);
+
+document.addEventListener('mousemove', (e) => {
+  const header = document.querySelector('header');
+  if (e.clientY < 60) {
+    header.classList.add('visible');
+  } else {
+    header.classList.remove('visible');
+  }
+});
+
 render(true);
 setTimeout(checkOverflow, 500);
 </script>
