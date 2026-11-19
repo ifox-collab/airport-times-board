@@ -491,7 +491,14 @@ function checkOverflow() {
   }
 }
 
-setInterval(render, 1000);
+setInterval(() => {
+  updateTimesOnly();
+}, 1000);
+
+setInterval(() => {
+  render(true);
+}, 60 * 60 * 1000);
+
 setInterval(checkHeyTime, 1000);
 setInterval(checkDailyReload, 30000);
 render(true);
